@@ -164,41 +164,36 @@ sub pop_first_rule {
 }
 
 sub pretty_print {
-
-    my ($s) = shift;
-
-    my $news = "";
-    my @lines = split( /\n/, $s );
-    foreach my $line (@lines) {
-
+  my ($s) = shift;
+  my $news = "";
+  my @lines = split( /\n/, $s );
+  foreach my $line (@lines) {
 	my $newline = "";
-
 	$line =~ s/(\s+)([\.\,\?\;\:])/$2/g;
 	$line =~ s/(\b)(a)\s+([aeiou])/$1$2n $3/gi;
-
-	if( $line =~ /\\section(\*?){(.*)}/ ) {
-	    $newline = "\\section${1}{" . 
-	      Autoformat::autoformat( $2, { case => 'highlight', 
-					    squeeze => 0 } );
-	    chomp $newline;
-	    chomp $newline;
-	    $newline .= "}";
-	} elsif( $line =~ /(\\subsection){(.*)}/ or 
-		 $line =~ /(\\slideheading){(.*)}/ ) {
-	    $newline = $1 . "{" . 
-	      Autoformat::autoformat( $2, { case => 'highlight', 
-					    squeeze => 0 } );
-	    chomp $newline;
-	    chomp $newline;
-	    $newline .= "}";
-	} elsif( $line =~ /\\title{(.*)}/ ) {
-	    $newline = "\\title{" . 
+	if( $line =~ /\\section(\*?)\{(.*)\}/ ) {
+    $newline = "\\section${1}\{" . 
+    Autoformat::autoformat( $2, { case => 'highlight', 
+	    squeeze => 0 } );
+    chomp $newline;
+    chomp $newline;
+    $newline .= "}";
+	} elsif( $line =~ /(\\subsection)\{(.*)\}/ or 
+    $line =~ /(\\slideheading)\{(.*)\}/ ) {
+	  $newline = $1 . "{" . 
+	  Autoformat::autoformat( $2, { case => 'highlight', 
+		  squeeze => 0 } );
+	  chomp $newline;
+	  chomp $newline;
+	  $newline .= "}";
+	} elsif( $line =~ /\\title\{(.*)\}/ ) {
+	  $newline = "\\title{" . 
 	      Autoformat::autoformat( $1, { case => 'highlight', 
 					    squeeze => 0  } );
 	    chomp $newline;
 	    chomp $newline;
 	    $newline .= "}";
-	} elsif( $line =~ /(.*) = {(.*)}\,/ ) {
+	} elsif( $line =~ /(.*) = \{(.*)\}\,/ ) {
 	    my $label = $1;
 	    my $curr = $2;
 	    # place brackets around any words containing capital letters
@@ -215,100 +210,90 @@ sub pretty_print {
 					       squeeze => 0, 
 					       break => break_latex(),
 					       ignore => qr/^\\/ } );
-	}
+	  }
 
-	$newline =~ s/\\Em/\\em/g;
+	  $newline =~ s/\\Em/\\em/g;
 
-	if( $newline !~ /\n$/ ) {
-	    $newline .= "\n";
-	}
-	$news .= $newline;
-
-    }
-
-    return $news;
+	  if( $newline !~ /\n$/ ) {
+      $newline .= "\n";
+	  }
+  	$news .= $newline;
+  }
+  return $news;
 }
 
 sub break_latex($$$) {
-    my ($text, $reqlen, $fldlen) = @_;
-    if( !defined $text ) {
-	$text = "";
-    }
-    return { $text, "" };
+  my ($text, $reqlen, $fldlen) = @_;
+  if( !defined $text ) {
+	  $text = "";
+  }
+  return { $text, "" };
 }
 
 sub expand {
-    my ($rules, $start, $RE, $debug) = @_;
+  my ($rules, $start, $RE, $debug) = @_;
 
-    # check for special rules ending in + and # 
-    # Rules ending in + generate a sequential integer
-    # The same rule ending in # chooses a random # from among preiously
-    # generated integers
-    if( $start =~ /(.*)\+$/ ) {
-	my $rule = $1;
-	my $i = $rules->{$rule};
-	if( !defined $i ) {
+  # check for special rules ending in + and #
+  # Rules ending in + generate a sequential integer
+  # The same rule ending in # chooses a random # from among preiously
+  # generated integers
+  if( $start =~ /(.*)\+$/ ) {
+	  my $rule = $1;
+	  my $i = $rules->{$rule};
+	  if( !defined $i ) {
 	    $i = 0;
 	    $rules->{$rule} = 1;
-	} else {
+	  } else {
 	    $rules->{$rule} = $i+1;
-	}
-	return $i;
-    } elsif( $start =~ /(.*)\#$/ ) {
-	my $rule = $1;
-	my $i = $rules->{$rule};
-	if( !defined $i ) {
+	  }
+	  return $i;
+  } elsif( $start =~ /(.*)\#$/ ) {
+	  my $rule = $1;
+	  my $i = $rules->{$rule};
+	  if( !defined $i ) {
 	    $i = 0;
-	} else {
+	  } else {
 	    $i = int rand $i;
-	}
-	return $i;
-    }
-    my $full_token;
+	  }
+	  return $i;
+  }
+  my $full_token;
 
-    my $repeat = 0;
-    my $count = 0;
-    do {
-
-	my $input = pick_rand ($rules->{$start});
-	$count++;
-	if ($debug >= 5) {
-	    warn "$start -> $input\n";
-	}
-
-	my ($pre, $rule);
-	my @components;
-	$repeat = 0;	
-
-	while (pop_first_rule ($rules, \$pre, \$input, \$rule, $RE)) {
+  my $repeat = 0;
+  my $count = 0;
+  do {
+  	my $input = pick_rand ($rules->{$start});
+  	$count++;
+  	if ($debug >= 5) {
+  	    warn "$start -> $input\n";
+  	}
+  	my ($pre, $rule);
+  	my @components;
+  	$repeat = 0;
+  	while (pop_first_rule ($rules, \$pre, \$input, \$rule, $RE)) {
 	    my $ex = expand ($rules, $rule, $RE, $debug);
 	    push @components, $pre if length ($pre);
 	    push @components, $ex if length ($ex);
-	}
-	push @components, $input if length ($input);
-	$full_token = join "", @components ;
-	my $ref = $rules->{dup_name("$start")};
-	if( defined $ref ) {
-	    my @dups = @{$ref};
-	    # make sure we haven't generated this exact token yet
-	    foreach my $d (@dups) {
-		if( $d eq $full_token ) {
-		    $repeat = 1;
-		}
-	    }
-	    
-	    if( !$repeat ) {
-		push @{$rules->{dup_name("$start")}}, $full_token;
-	    } elsif( $count > 50 ) {
-		$repeat = 0;
-	    }
-	    
-	}
-
-    } while( $repeat );
-
-    return $full_token;
-    
+  	}
+  	push @components, $input if length ($input);
+  	$full_token = join "", @components ;
+  	my $ref = $rules->{dup_name("$start")};
+  	if ( defined $ref ) {
+  	  my @dups = @{$ref};
+  	  # make sure we haven't generated this exact token yet
+  	  foreach my $d (@dups) {
+  		  if( $d eq $full_token ) {
+  		    $repeat = 1;
+  		  }
+  	  }
+  	  if( !$repeat ) {
+  	   	push @{$rules->{dup_name("$start")}}, $full_token;
+  	  } elsif( $count > 50 ) {
+  		  $repeat = 0;
+  	  }
+  	}
+  } while( $repeat );
+  return $full_token;
 }
 
 

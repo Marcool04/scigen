@@ -16,6 +16,7 @@
 #    along with SCIgen; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+use lib './';
 
 use strict;
 use scigen;
@@ -33,7 +34,7 @@ my $seed;
 sub usage {
     select(STDERR);
     print <<EOUsage;
-    
+
 $0 [options]
   Options:
 
@@ -76,10 +77,10 @@ if( defined $filename ) {
     $eps_file = $filename;
 }
 
-my @label_types = qw( NODE_LABEL_LET NODE_LABEL_PROG 
-		      NODE_LABEL_NET NODE_LABEL_IP NODE_LABEL_HW 
+my @label_types = qw( NODE_LABEL_LET NODE_LABEL_PROG
+		      NODE_LABEL_NET NODE_LABEL_IP NODE_LABEL_HW
 		      NODE_LABEL_DEC);
-my @edge_label_types = ( "\"\"", "\"\"", "\"\"", "\"\"", "\"\"", 
+my @edge_label_types = ( "\"\"", "\"\"", "\"\"", "\"\"", "\"\"",
 			 "EDGE_LABEL_YESNO" );
 my %types = ("digraph" => "DIR_LAYOUT",
 	     "graph" => "UNDIR_LAYOUT" );
@@ -121,7 +122,7 @@ $dat->{"EDGEOP"} = \@c;
 if( $sysname =~ /\{\\em (.*)\}/ ) {
     $sysname = $1;
 }
-my @d = ($sysname); 
+my @d = ($sysname);
 $dat->{"SYSNAME"} = \@d;
 my @e = ();
 my @shapes = split( /\s+/, $shape_type );
@@ -143,21 +144,21 @@ open( VIZ, ">$viz_file" ) or die( "Can't open $viz_file for writing" );
 print VIZ $graph_file;
 close( VIZ );
 
-system( "$program -Tps $viz_file > $eps_file.tmp; ps2epsi $eps_file.tmp $eps_file" ) and
-    die( "Can't run $program on $viz_file" );
+system( "$program -Tps $viz_file > $eps_file.tmp; ps2epsi $eps_file.tmp $eps_file" )
+    and die( "Can't run $program on $viz_file" );
 
 if( `uname` =~ /Linux/ ) {
     # fix bounding box of stupid linux's ps2epsi
-    my $bbline = `grep "BoundingBox" $eps_file.tmp | tail -1`;
+    my $bbline = `grep "BoundingBox" $eps_file | tail -1`;
     chomp $bbline;
     #print "Fixing box: $bbline\n";
-    system( "sed -e s/%%BoundingBox.*/\"$bbline\"/ -i $eps_file" );
+    system( "sed -e s/%%BoundingBox.*/\"$bbline\"/ -i $eps_file" )
+        and die("FAILED: sed -e s/%%BoundingBox.*/\"$bbline\"/ -i $eps_file");
 }
 
 
 if( !defined $filename ) {
-    system( "gv $eps_file" ) and
-	die( "Can't run $program on $viz_file" );
+    system( "gv $eps_file" )
+        and die( "Can't run gv on $eps_file" );
 }
-
-system( "rm -f $tmp_pre*" ) and die( "Couldn't rm" );
+system( "rm -f $tmp_pre*" ) and die( "Couldn't rm $tmp_pre*" );

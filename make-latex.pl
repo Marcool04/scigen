@@ -16,6 +16,7 @@
 #    along with SCIgen; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+use lib './';
 
 use strict;
 use scigen;
@@ -222,7 +223,7 @@ foreach my $clabel (keys(%citelabels)) {
     scigen::compute_re( $tex_dat, \$tex_RE );
     my $bib = scigen::generate ($tex_dat, "BIBTEX_ENTRY", $tex_RE, 0, 1);
     print BIB $bib;
-    
+
 }
 close( BIB );
 
@@ -233,23 +234,36 @@ if( !defined $options{"savedir"} ) {
 	$land = "-t landscape";
     }
 
-    system( "cp $class_files $tmp_dir; cd $tmp_dir; latex $tex_prefix; bibtex $tex_prefix; latex $tex_prefix; latex $tex_prefix; rm $class_files; " . 
-	    "dvips $land -o $ps_file $dvi_file" )
-	and die( "Couldn't latex nothing." );
+    system( "cp $class_files $tmp_dir")
+        and die ("FAILED: cp $class_files $tmp_dir");
+    system( "cd $tmp_dir; latex $tex_prefix")
+        and die("FAILED: cd $tmp_dir; latex $tex_prefix");
+    system( "cd $tmp_dir; bibtex $tex_prefix")
+        and die("FAILED: cd $tmp_dir; bibtex $tex_prefix");
+    system( "cd $tmp_dir; latex $tex_prefix")
+        and die("FAILED: cd $tmp_dir; latex $tex_prefix");
+    system( "cd $tmp_dir; latex $tex_prefix")
+        and die("FAILED: cd $tmp_dir; latex $tex_prefix");
+    system( "cd $tmp_dir; rm $class_files")
+        and die("FAILED: cd $tmp_dir; rm $class_files");
+    system( "cd $tmp_dir; dvips $land -o $ps_file $dvi_file")
+    	and die("FAILED: cd $tmp_dir; dvips $land -o $ps_file $dvi_file" );
 
     if( defined $options{"file"} ) {
 	my $f = $options{"file"};
 	if( defined $options{"talk"} ) {
-	    system( "ps2pdf $ps_file $pdf_file; cp $pdf_file $f" ) 
-		and die( "Couldn't ps2pdf/cp $pdf_file" );
+	    system( "ps2pdf $ps_file $pdf_file")
+            and die("FAILED: ps2pdf $ps_file $pdf_file");
+        system( "cp $pdf_file $f" )
+    		and die( "Couldn't ps2pdf/cp $pdf_file" );
 	} else {
-	    system( "cp $ps_file $f" ) and die( "Couldn't cp to $f" );
+	    system( "cp $ps_file $f" ) and die( "Couldn't cp $ps_file to $f" );
 	}
     } elsif( defined $options{"talk"} ) {
-	system( "ps2pdf $ps_file $pdf_file; acroread $pdf_file" ) 
-	    and die( "Couldn't ps2pdf/acroread $ps_file" );
+	   system( "ps2pdf $ps_file $pdf_file; acroread $pdf_file" ) 
+	       and die( "Couldn't ps2pdf/acroread $ps_file" );
     } else {
-	system( "gv $ps_file" ) and die( "Couldn't gv $ps_file" );
+	   system( "gv $ps_file" ) and die( "Couldn't gv $ps_file" );
     }
 
 }
@@ -263,17 +277,22 @@ if( defined $options{"tar"} or defined $options{"savedir"} ) {
     my $f = $options{"tar"};
     my $tartmp = "$tmp_dir/tartmp.$$";
     my $all_files = "$tex_file $class_files @figures $bib_file";
-    system( "mkdir $tartmp; cp $all_files $tartmp/;" ) and 
-	die( "Couldn't mkdir $tartmp" );
+    system( "mkdir $tartmp")
+        and die("FAILED: mkdir $tartmp");
+    system( "cp $all_files $tartmp/" )
+        and die( "Couldn't mkdir $tartmp" );
     $all_files =~ s/$tmp_dir\///g;
-    system( "echo $seedstring > $tartmp/seed.txt" ) and 
-	die( "Couldn't cat to $tartmp/seed.txt" );
+    system( "echo $seedstring > $tartmp/seed.txt" )
+        and die( "Couldn't cat to $tartmp/seed.txt" );
     $all_files .= " seed.txt";
 
     if( defined $options{"tar"} ) {
-	system( "cd $tartmp; tar -czf $$.tgz $all_files; cd -; " . 
-		"cp $tartmp/$$.tgz $f; rm -rf $tartmp" ) and 
-		    die( "Couldn't tar to $f" );
+	system( "cd $tartmp; tar -czf $$.tgz $all_files")
+        and die("FAILED: cd $tartmp; tar -czf $$.tgz $all_files");
+    system( "cp $tartmp/$$.tgz $f")
+        and die("FAILED: cp $tartmp/$$.tgz $f");
+    system( "rm -rf $tartmp")
+            and die( "FAILED: rm -rf $tartmp" );
     } else {
 	# saving everything untarred
 	my $dir = $options{"savedir"};
