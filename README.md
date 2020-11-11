@@ -11,22 +11,28 @@ a pdf you'll also need tools from texlive-core, notably `pdflatex`.
 
 ## Arch Linux
 
-Install dependencies:
+### Install dependencies:
+
 `pacman -Sy graphviz texlive-bin inkscape ghostscript gnuplot`
 
 A bunch of other things are required that your system probably already has
 (perl, etc.)
 
-Get the code:
+### Get the code:
+
 `git clone "https://github.com/Marcool04/scigen"`
 
+### Test
+
 You can now test that everything works:
+
 ````
+$ cd scigen
 $ mkdir output
 $ ./make-latex.pl --author "Jean Peuplu" --savedir "$pwd/output/"
 ````
 
-(Optional) convert to pdf:
+(Optionally) convert the latex output to pdf:
 ````
 $ cd output
 $ pdflatex
